@@ -17,7 +17,7 @@ NEWSPIDER_MODULE = "kinopoisk.spiders"
 USER_AGENT = "kinopoisk (+https://www.kinopoisk.ru/)"
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
