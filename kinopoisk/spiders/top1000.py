@@ -9,18 +9,33 @@ class Top1000Spider(scrapy.Spider):
     start_urls = ["https://www.kinopoisk.ru/lists/movies/top_1000/"]
     count_pages = 20
 
-    def parse(self, response):
+    def start_requests(self):
         for page in range(1, self.count_pages + 1):
             url = f"https://www.kinopoisk.ru/lists/movies/top_1000/?page={page}"
-            yield response.follow(url, callback=self.parse_pages)
+            yield scrapy.Request(url, callback=self.parse_pages)
 
     def parse_pages(self, response):
+        names_of_the_movie = response.css('span.styles_mainTitle__IFQyZ.styles_activeMovieTittle__kJdJj::text')
+        years_of_films = response.css('div.styles_root__ti07r'). \
+                                css('div.desktop-list-main-info_secondaryTitleSlot__mc0mI'). \
+                                css('span.desktop-list-main-info_secondaryText__M_aus::text')
+        filtered_years_of_films = list(filter(lambda year : year != ',', map(lambda year: year.get().strip(), years_of_films)))
+
+        adddional_info = response.css('div.styles_root__ti07r').css('span.desktop-list-main-info_truncatedText__IMQRP::text')
+        countries = [adddional_info[i] for i in range(len(adddional_info)) if i % 2 == 0]
+
+        producers = response.css('div.styles_root__ti07r').css('span.desktop-list-main-info_truncatedText__IMQRP::text')
+        movie_ratings = response.css('span.styles_kinopoiskValue__9qXjg::text')
+
         for i in range(50):
-            yield {
-                'name_of_the_movie': response.css('span.styles_mainTitle__IFQyZ.styles_activeMovieTittle__kJdJj::text')[i].get(),
-                'year': response.css('span.desktop-list-main-info_secondaryText__M_aus::text')[i].get().split(',')[0],
-                'country': response.css('span.desktop-list-main-info_truncatedText__IMQRP::text')[i].get().split()[0],
-                'producer': ' '.join(response.css('span.desktop-list-main-info_truncatedText__IMQRP::text')[i].get().split()[-2:]),
-                'raiting': response.css('span.styles_kinopoiskValue__9qXjg::text')[i].get(),
-                'link': response.css('div.styles_root__ZH67U.styles_sizeS__zzgWP')[i].get()
-            }
+            try:
+                yield {
+                    'name_of_the_movie': names_of_the_movie[i].get(),
+                    'year': filtered_years_of_films[i].split(',')[0],
+                    'country': countries[i].get().split()[0],
+                    'producer': ' '.join(producers[i].get().split()[-2:]),
+                    'raiting': movie_ratings[i].get(),
+                    # 'link': 'https://hd.kinopoisk.ru/' + response.css('div.styles_root__ti07r').css('div.styles_root__ZH67U.styles_sizeS__zzgWP')[i].get().xpah('@href)
+                }
+            except IndexError:
+                print('', end='')
