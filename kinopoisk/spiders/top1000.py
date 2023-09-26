@@ -21,6 +21,6 @@ class Top1000Spider(scrapy.Spider):
                 'year': response.css('span.desktop-list-main-info_secondaryText__M_aus::text')[i].get().split(',')[0],
                 'country': response.css('span.desktop-list-main-info_truncatedText__IMQRP::text')[i].get().split()[0],
                 'producer': ' '.join(response.css('span.desktop-list-main-info_truncatedText__IMQRP::text')[i].get().split()[-2:]),
-                # 'raiting': response.css('span.styles_kinopoiskValuePositive__vOb2E.styles_kinopoiskValue__9qXjg::text')[i].get(),
-                'link': ' '
+                'raiting': response.css('span.styles_kinopoiskValue__9qXjg::text')[i].get(),
+                'link': response.css('div.styles_root__ZH67U.styles_sizeS__zzgWP')[i].get()
             }
