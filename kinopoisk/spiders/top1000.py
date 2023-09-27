@@ -7,11 +7,11 @@ class Top1000Spider(scrapy.Spider):
     name = "top1000"
     allowed_domains = ["www.kinopoisk.ru"]
     count_pages = 20
-    start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page={page}"
+    start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page=%d"
 
     def start_requests(self) -> Iterable[Request]:
         for page in range(1, self.count_pages + 1):
-            url = self.start_url.format(page=page)
+            url = self.start_url % (page)
             yield scrapy.Request(url=url, callback=self.parse_pages)
 
     def _movie_titles(self, response) -> list:

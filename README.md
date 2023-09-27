@@ -10,10 +10,10 @@
 ### Usage
 
 ```
-scrapy crawl top1000 -o films.csv
+make
 ```
 
-### Lint
+### Linter
 ```
-flake8 .
+flake8
 ```
