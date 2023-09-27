@@ -14,11 +14,13 @@ class Top1000Spider(scrapy.Spider):
             url = self.start_url.format(page=page)
             yield scrapy.Request(url=url, callback=self.parse_pages)
 
-    def parse_pages(self, response):
-        movie_titles = response. \
-                        css('span.styles_mainTitle__IFQyZ::text'). \
-                        getall()
+    def _movie_titles(self, response) -> list:
+        return \
+            response. \
+            css('span.styles_mainTitle__IFQyZ::text'). \
+            getall()
 
+    def _years_of_premieres(self, response) -> list:
         years_of_premieres = map(
             lambda year: year.get().strip(),
             response.css('div.styles_root__ti07r').
@@ -29,7 +31,9 @@ class Top1000Spider(scrapy.Spider):
         filtered_years_of_premieres = list(
             filter(lambda year: year != ',', years_of_premieres)
             )
+        return filtered_years_of_premieres
 
+    def _clean_additional_info(self, response) -> list:
         adddional_info = response.css('div.styles_root__ti07r'). \
             css('span.desktop-list-main-info_truncatedText__IMQRP::text')
 
@@ -39,22 +43,35 @@ class Top1000Spider(scrapy.Spider):
             filter(lambda info: len(info[0]) > 1, adddional_info)
             )
 
+        return clean_info
+
+    def _movie_ratings(self, response) -> list:
         movie_ratings = response.css('div.styles_rating__LU3_x')
 
         clean_movie_ratings = [
-            rating.css('span.styles_kinopoiskValue__9qXjg::text').get() or '-' for rating in movie_ratings
+            rating.css('span.styles_kinopoiskValue__9qXjg::text').get() or '-'
+            for rating in movie_ratings
             ]
 
+        return clean_movie_ratings
+
+    def parse_pages(self, response):
+        movie_titles = self._movie_titles(response)
+        years_of_premieres = self._years_of_premieres(response)
+        clean_info = self._clean_additional_info(response)
+        movie_ratings = self._movie_ratings(response)
+
         links = [
-            resp.css('div.styles_onlineCaption__ftChy') != [] for resp in response.css('div.styles_root__ti07r')
+            resp.css('div.styles_onlineCaption__ftChy') != []
+            for resp in response.css('div.styles_root__ti07r')
             ]
 
         for i in range(50):
             yield {
                 'name_of_the_movie': movie_titles[i],
-                'year': filtered_years_of_premieres[i].split(',')[0],
+                'year': years_of_premieres[i].split(',')[0],
                 'country': clean_info[i][0],
                 'producer': ' '.join(clean_info[i][-2:]),
-                'raiting': clean_movie_ratings[i],
+                'raiting': movie_ratings[i],
                 'link': links[i]
             }
