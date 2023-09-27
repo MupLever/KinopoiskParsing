@@ -9,6 +9,11 @@
 
 ### Usage
 
-```py
+```
 scrapy crawl top1000 -o films.csv
+```
+
+### Lint
+```
+flake8 .
 ```
