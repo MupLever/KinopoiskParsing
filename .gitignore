@@ -1,2 +1,9 @@
 #Ignore csv-files
 *.csv
+
+#Ignore cache
+/kinopoisk/spiders/__pycache__
+/kinopoisk/__pycache__
+
+#Ignore httpcache
+.scrapy
