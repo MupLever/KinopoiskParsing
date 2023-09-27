@@ -6,13 +6,12 @@ from scrapy.http import Request
 class Top1000Spider(scrapy.Spider):
     name = "top1000"
     allowed_domains = ["kinopoisk.ru"]
-    start_urls = ["https://www.kinopoisk.ru/lists/movies/top_1000/"]
     count_pages = 20
+    start_urls = [ f"https://www.kinopoisk.ru/lists/movies/top_1000/?page={page}" for page in range(1, count_pages + 1) ]
 
     def start_requests(self) -> Iterable[Request]:
-        for page in range(1, self.count_pages + 1):
-            url = f"https://www.kinopoisk.ru/lists/movies/top_1000/?page={page}"
-            yield scrapy.Request(url, callback=self.parse_pages)
+        for url in self.start_urls:
+            yield scrapy.Request(url=url, callback=self.parse_pages)
 
     def parse_pages(self, response):
         movie_titles = response.css('span.styles_mainTitle__IFQyZ::text').getall()

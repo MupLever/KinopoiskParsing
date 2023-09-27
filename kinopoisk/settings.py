@@ -12,9 +12,8 @@ BOT_NAME = "kinopoisk"
 SPIDER_MODULES = ["kinopoisk.spiders"]
 NEWSPIDER_MODULE = "kinopoisk.spiders"
 
-
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = "kinopoisk (+https://www.kinopoisk.ru/)"
+# USER_AGENT = "kinopoisk (+Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:109.0) Gecko/20100101 Firefox/117.0)"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -37,22 +36,23 @@ ROBOTSTXT_OBEY = False
 #TELNETCONSOLE_ENABLED = False
 
 # Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-#    "Accept-Language": "en",
-#}
+# DEFAULT_REQUEST_HEADERS = {
+#    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+#    "Accept-Encoding": "gzip, deflate, br",
+#    "Accept-Language": "en"
+# }
 
 # Enable or disable spider middlewares
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-SPIDER_MIDDLEWARES = {
-   "kinopoisk.middlewares.KinopoiskSpiderMiddleware": 543,
-}
+# SPIDER_MIDDLEWARES = {
+#    "kinopoisk.middlewares.KinopoiskSpiderMiddleware": 543,
+# }
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-DOWNLOADER_MIDDLEWARES = {
-   "kinopoisk.middlewares.KinopoiskDownloaderMiddleware": 543,
-}
+# DOWNLOADER_MIDDLEWARES = {
+#    "kinopoisk.middlewares.KinopoiskDownloaderMiddleware": 543,
+# }
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
