@@ -1,5 +1,7 @@
+from typing import Iterable
 import scrapy
-from scrapy.http import Response
+from scrapy.http import Request, Response
+from scrapy.selector.unified import SelectorList
 
 
 class Top1000Spider(scrapy.Spider):
@@ -9,81 +11,65 @@ class Top1000Spider(scrapy.Spider):
     COUNT_PAGES = 20
     start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page=%d"
 
-    def _movie_titles(self, response: Response) -> list:
-        '''Takes in the response and returns an list of movie titles'''
-        return \
-            response. \
+    def _movie_title(self, item: SelectorList) -> str:
+        '''Takes in the selector with one item and returns a movie title'''
+        return item. \
             css("span.styles_mainTitle__IFQyZ::text"). \
-            getall()
+            get()
 
-    def _years_of_premieres(self, response: Response) -> list:
-        '''Takes in the response and returns a list of prime years'''
-        years_of_premieres = map(
-            lambda year: year.get().strip().split(',')[0],
-            response.css("div.styles_root__ti07r").
-            css("div.desktop-list-main-info_secondaryTitleSlot__mc0mI").
+    def _year_of_premiere(self, item: SelectorList) -> str:
+        '''
+        Takes in the selector with one item and 
+        returns the year of the premiere
+        '''
+        main_info = item. \
+            css("div.desktop-list-main-info_secondaryTitleSlot__mc0mI"). \
             css("span.desktop-list-main-info_secondaryText__M_aus::text")
-            )
 
-        filtered_years_of_premieres = list(
-            filter(lambda year: year != '', years_of_premieres)
-            )
+        return main_info[0].get().strip().split(',')[0] or \
+            main_info[1].get().strip().split(',')[0]
 
-        return filtered_years_of_premieres
-
-    def _clean_additional_info(self, response: Response) -> list:
+    def _additional_info(self, item: SelectorList) -> str:
         '''
-        Takes in the response and returns a list of additional
-        information, such as country and producer
+        Takes in the selector with one item and returns an
+        additional information, such as country and producer
         '''
-        adddional_info = response.css("div.styles_root__ti07r"). \
-            css("span.desktop-list-main-info_truncatedText__IMQRP::text")
+        return item. \
+            css("span.desktop-list-main-info_truncatedText__IMQRP::text"). \
+            get(). \
+            split()
 
-        adddional_info = map(lambda info: info.get().split(), adddional_info)
+    def _movie_rating(self, item: SelectorList) -> str:
+        '''Takes in the selector with one item and returns movie ratings'''
+        rating = item. \
+            css("div.styles_rating__LU3_x"). \
+            css("span.styles_kinopoiskValue__9qXjg::text"). \
+            get()
 
-        clean_info = list(
-            filter(lambda info: len(info[0]) > 1, adddional_info)
-            )
+        return rating or "-"
 
-        return clean_info
-
-    def _movie_ratings(self, response: Response) -> list:
-        '''Takes in the response and returns an list of movie ratings'''
-        movie_ratings = response.css("div.styles_rating__LU3_x")
-
-        clean_movie_ratings = [
-            rating.css("span.styles_kinopoiskValue__9qXjg::text").get() or "-"
-            for rating in movie_ratings
-            ]
-
-        return clean_movie_ratings
-
-    def start_requests(self) -> None:
-        for page in range(1, self.COUNT_PAGES + 1):
-            url = self.start_url % (page)
-            yield scrapy.Request(url=url, callback=self.parse_pages)
-
-    def parse_pages(self, response: Response) -> None:
-        '''Parser method for each page of the top 1000'''
-        movie_titles = self._movie_titles(response)
-        years_of_premieres = self._years_of_premieres(response)
-        clean_info = self._clean_additional_info(response)
-        movie_ratings = self._movie_ratings(response)
-        existence_of_links = [
-            item.css("div.styles_onlineCaption__ftChy") != []
-            for item in response.css("div.styles_root__ti07r")
-            ]
-
-        for title, year, info, rating, link in zip(movie_titles,
-                                                   years_of_premieres,
-                                                   clean_info,
-                                                   movie_ratings,
-                                                   existence_of_links):
-            yield {
-                "name_of_the_movie": title,
-                "year": year,
+    def _parse_item(self, item: SelectorList) -> dict:
+        '''
+        Takes in the selector with one item and
+        returns a dict with all attributes
+        '''
+        info = self._additional_info(item)
+        return {
+                "name_of_the_movie": self._movie_title(item),
+                "year": self._year_of_premiere(item),
                 "country": info[0],
-                "producer": " ".join(info[-2:]),
-                "raiting": rating,
-                "link": link
+                "producer": ' '.join(info[-2:]),
+                "raiting": self._movie_rating(item),
+                "link": item.css("div.styles_onlineCaption__ftChy") != [],
             }
+
+    def start_requests(self) -> Iterable[Request]:
+        for page in range(1, self.COUNT_PAGES + 1):
+            url = self.start_url % page
+            yield scrapy.Request(url=url, callback=self.parse_page)
+
+    def parse_page(self, response: Response) -> Iterable[dict]:
+        '''Parser method for each page of the top 1000'''
+        items = response.css("div.styles_root__ti07r")
+        for item in items:
+            yield self._parse_item(item)
