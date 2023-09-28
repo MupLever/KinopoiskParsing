@@ -16,4 +16,5 @@ make
 ### Linter
 ```
 flake8
+pylint
 ```
