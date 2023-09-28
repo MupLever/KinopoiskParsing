@@ -7,7 +7,6 @@ class Top1000Spider(scrapy.Spider):
     name = "top1000"
     allowed_domains = ["www.kinopoisk.ru"]
     COUNT_PAGES = 20
-    COUNT_ITEMS = 50
     start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page=%d"
 
     def _movie_titles(self, response: Response) -> list:
@@ -20,14 +19,14 @@ class Top1000Spider(scrapy.Spider):
     def _years_of_premieres(self, response: Response) -> list:
         '''Takes in the response and returns a list of prime years'''
         years_of_premieres = map(
-            lambda year: year.get().strip(),
+            lambda year: year.get().strip().split(',')[0],
             response.css("div.styles_root__ti07r").
             css("div.desktop-list-main-info_secondaryTitleSlot__mc0mI").
             css("span.desktop-list-main-info_secondaryText__M_aus::text")
             )
 
         filtered_years_of_premieres = list(
-            filter(lambda year: year != ",", years_of_premieres)
+            filter(lambda year: year != '', years_of_premieres)
             )
 
         return filtered_years_of_premieres
@@ -70,18 +69,21 @@ class Top1000Spider(scrapy.Spider):
         years_of_premieres = self._years_of_premieres(response)
         clean_info = self._clean_additional_info(response)
         movie_ratings = self._movie_ratings(response)
-
         existence_of_links = [
             item.css("div.styles_onlineCaption__ftChy") != []
             for item in response.css("div.styles_root__ti07r")
             ]
 
-        for i in range(self.COUNT_ITEMS):
+        for title, year, info, rating, link in zip(movie_titles,
+                                                   years_of_premieres,
+                                                   clean_info,
+                                                   movie_ratings,
+                                                   existence_of_links):
             yield {
-                "name_of_the_movie": movie_titles[i],
-                "year": years_of_premieres[i].split(",")[0],
-                "country": clean_info[i][0],
-                "producer": " ".join(clean_info[i][-2:]),
-                "raiting": movie_ratings[i],
-                "link": existence_of_links[i]
+                "name_of_the_movie": title,
+                "year": year,
+                "country": info[0],
+                "producer": " ".join(info[-2:]),
+                "raiting": rating,
+                "link": link
             }
