@@ -1,7 +1,7 @@
 from typing import Iterable
 import scrapy
 from scrapy.http import Request, Response
-from scrapy.selector.unified import SelectorList
+from scrapy.selector.unified import Selector
 
 
 class Top1000Spider(scrapy.Spider):
@@ -11,15 +11,15 @@ class Top1000Spider(scrapy.Spider):
     COUNT_PAGES = 20
     start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page=%d"
 
-    def _movie_title(self, item: SelectorList) -> str:
+    def _movie_title(self, item: Selector) -> str:
         '''Takes in the selector with one item and returns a movie title'''
         return item. \
             css("span.styles_mainTitle__IFQyZ::text"). \
             get()
 
-    def _year_of_premiere(self, item: SelectorList) -> str:
+    def _year_of_premiere(self, item: Selector) -> str:
         '''
-        Takes in the selector with one item and 
+        Takes in the selector with one item and
         returns the year of the premiere
         '''
         main_info = item. \
@@ -29,7 +29,7 @@ class Top1000Spider(scrapy.Spider):
         return main_info[0].get().strip().split(',')[0] or \
             main_info[1].get().strip().split(',')[0]
 
-    def _additional_info(self, item: SelectorList) -> str:
+    def _additional_info(self, item: Selector) -> str:
         '''
         Takes in the selector with one item and returns an
         additional information, such as country and producer
@@ -39,8 +39,8 @@ class Top1000Spider(scrapy.Spider):
             get(). \
             split()
 
-    def _movie_rating(self, item: SelectorList) -> str:
-        '''Takes in the selector with one item and returns movie ratings'''
+    def _movie_rating(self, item: Selector) -> str:
+        '''Takes in the selector with one item and returns movie rating'''
         rating = item. \
             css("div.styles_rating__LU3_x"). \
             css("span.styles_kinopoiskValue__9qXjg::text"). \
@@ -48,7 +48,7 @@ class Top1000Spider(scrapy.Spider):
 
         return rating or "-"
 
-    def _parse_item(self, item: SelectorList) -> dict:
+    def _parse_item(self, item: Selector) -> dict:
         '''
         Takes in the selector with one item and
         returns a dict with all attributes
