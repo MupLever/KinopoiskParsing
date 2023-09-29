@@ -9,7 +9,7 @@ class Top1000Spider(scrapy.Spider):
     name = "top1000"
     allowed_domains = ["www.kinopoisk.ru"]
     COUNT_PAGES = 20
-    start_url = "https://www.kinopoisk.ru/lists/movies/top_1000/?page=%d"
+    start_urls = ["https://www.kinopoisk.ru/lists/movies/top_1000/"]
 
     def _movie_title(self, item: Selector) -> str:
         '''Takes in the selector with one item and returns a movie title'''
@@ -63,10 +63,10 @@ class Top1000Spider(scrapy.Spider):
                 "link": item.css("div.styles_onlineCaption__ftChy") != [],
             }
 
-    def start_requests(self) -> Iterable[Request]:
+    def parse(self, response: Response) -> Iterable[Request]:
         for page in range(1, self.COUNT_PAGES + 1):
-            url = self.start_url % page
-            yield scrapy.Request(url=url, callback=self.parse_page)
+            url = f"https://www.kinopoisk.ru/lists/movies/top_1000/?{page=}"
+            yield response.follow(url=url, callback=self.parse_page)
 
     def parse_page(self, response: Response) -> Iterable[dict]:
         '''Parser method for each page of the top 1000'''
